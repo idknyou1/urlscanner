@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
 import os
+import re
 
 def clear():
     os.system("cls" if os.name == "nt" else "clear")
@@ -11,9 +12,9 @@ def banner():
     print(r"""
    __  ______  __       _____ _________    _   __
   / / / / __ \/ /      / ___// ____/   |  / | / /
- / / / / /_/ / /       \__ \/ /   / /| | /  |/ /
-/ /_/ / _, _/ /___    ___/ / /___/ ___ |/ /|  /
-\____/_/ |_/_____/   /____/\____/_/  |_/_/ |_/
+ / / / / /_/ / /       \__ \/ /   / /| | /  |/ / 
+/ /_/ / _, _/ /___    ___/ / /___/ ___ |/ /|  /  
+\____/_/ |_/_____/   /____/\____/_/  |_/_/ |_/   
 """)
     print("\033[0m")  
     print("       MALICIOUS URL SCANNER by Idknyou_\n")
@@ -27,6 +28,25 @@ def domain_from_url(url):
 def is_external_link(base_domain, link_url):
     link_domain = domain_from_url(link_url)
     return link_domain and (link_domain != base_domain)
+
+def is_suspicious_domain(url):
+    parsed = urlparse(url)
+    domain = parsed.hostname or ""
+
+    risky_tlds = ['.sbs', '.xyz', '.tk', '.ml', '.ga', '.cf', '.gq']
+    if any(domain.endswith(tld) for tld in risky_tlds):
+        return True
+
+    if domain.count('.') >= 3:
+        return True
+
+    if re.search(r'[0-9]{3,}', domain) or domain.count('-') >= 2:
+        return True
+
+    if len(domain) >= 40:
+        return True
+
+    return False
 
 def scan_url(url):
     suspicious_domains = [
@@ -91,9 +111,12 @@ def scan_url(url):
         if len(external_links) > 20:
             score += 2
         if protection_flag:
-            score += 3  
+            score += 3
 
-        
+        if is_suspicious_domain(url):
+            print("\033[91m[!] Domain appears suspicious based on structure.\033[0m")
+            score += 4
+
         print(f"\n[+] Page title: {title if title else 'N/A'}")
 
         print(f"[+] Found {len(suspicious_script_domains)} suspicious external script(s):")
@@ -109,16 +132,15 @@ def scan_url(url):
         print(f"[+] Found {len(external_links)} external links.")
 
         print(f"\nHeuristic suspicion score: {score}")
-        if score >= 6:
-            print("\033[91m[!] This link may be suspicious.\033[0m")
-        elif score >= 3:
+        if score >= 8:
+            print("\033[91m[!] This link is very suspicious.\033[0m")
+        elif score >= 4:
             print("\033[93m[!] This link is somewhat suspicious, caution advised.\033[0m")
         else:
             print("\033[92m[+] This link appears clean.\033[0m")
 
     except Exception as e:
         print(f"\033[91m[-] Error while scanning: {e}\033[0m")
-
 
 def main():
     while True:
