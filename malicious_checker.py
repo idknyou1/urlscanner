@@ -55,6 +55,15 @@ def scan_url(url):
 
     try:
         response = requests.get(url, timeout=10)
+        content_type = response.headers.get("Content-Type", "").lower()
+
+        if not "text/html" in content_type:
+            print(f"\033[91m[!] Suspicious file type: {content_type} — not a regular webpage.\033[0m")
+            if any(ext in url.lower() for ext in [".exe", ".bin", ".scr", ".dll", ".apk", ".bat", ".cmd", ".ps1", ".vbs"]):
+                print("\033[91m[!] File extension indicates a potential malware payload.\033[0m")
+            print("\033[91m[!] This is likely a direct binary/malware link. Avoid executing or downloading.\033[0m")
+            return
+
         html = response.text
         soup = BeautifulSoup(html, 'html.parser')
         base_domain = domain_from_url(url)
