@@ -76,7 +76,7 @@ def scan_url(url):
             "cloudflare", "ddos protection", "security check"
         ]
 
-        protection_flag = any(ind in title.lower() or ind in lower_html for ind in protection_indicators)
+        protection_flag = any(ind in (title.lower() if title else "") or ind in lower_html for ind in protection_indicators)
         if protection_flag:
             print("\033[93m[!] Page looks like a protection or anti-bot interstitial.\033[0m")
 
